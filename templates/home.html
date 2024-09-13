@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>Welcome to Q_quiz</h1>
+    <p>Test your knowledge by taking the quiz!</p>
+    {% if current_user.is_authenticated %}
+        <a href="{{ url_for('quiz') }}" class="btn">Take Quiz</a>
+    {% else %}
+        <a href="{{ url_for('login') }}" class="btn">Login to start</a>
+    {% endif %}
+{% endblock %}
