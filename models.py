@@ -1,6 +1,8 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from extensions import db
+from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import orm
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -16,9 +18,23 @@ class Quiz(db.Model):
 
 class Question(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    text = db.Column(db.String(200), nullable=False)
-    choices = db.Column(db.PickleType, nullable=False)  # Store as list
-    correct_answer = db.Column(db.String(200), nullable=False)
+    text = db.Column(db.String(255), nullable=False)
+    quiz_id = Column(Integer, ForeignKey("quiz.id"))
+    quiz = db.relationship('Quiz', back_populates='questions')
+
+    # Relationship to answers
+    answers = db.relationship('Answer', back_populates='question')
+
+class Answer(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    text = db.Column(db.String(255), nullable=False)
+    is_correct = db.Column(db.Boolean, nullable=False)
+
+    # Foreign key to Question
+    question_id = db.Column(db.Integer, db.ForeignKey('question.id'))
+
+    # Relationship to Question
+    question = db.relationship('Question', back_populates='answers')
 
 class Result(db.Model):
     id = db.Column(db.Integer, primary_key=True)

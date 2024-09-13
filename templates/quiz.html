@@ -16,3 +16,21 @@
         <input type="submit" value="Submit Quiz">
     </form>
 {% endblock %}
+{% block content %}
+    <h2>{{ quiz.title }}</h2>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        {% for question in quiz.questions %}
+            <div>
+                <h4>{{ question.text }}</h4>
+                {% for answer in question.answers %}
+                    <label>
+                        <input type="radio" name="question_{{ question.id }}" value="{{ answer.id }}">
+                        {{ answer.text }}
+                    </label>
+                {% endfor %}
+            </div>
+        {% endfor %}
+        {{ form.submit() }}
+    </form>
+{% endblock %}

@@ -1,0 +1,42 @@
+<!-- templates/results.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results - Q Quiz</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Quiz Results</h2>
+
+        <div class="results-summary">
+            <h3>{{ user.username }}'s Results</h3>
+            <p>Total Quizzes Attempted: {{ total_quizzes }}</p>
+            <p>Total Correct Answers: {{ total_correct }}</p>
+            <p>Total Questions Answered: {{ total_questions }}</p>
+            <p>Average Score: {{ average_score }}%</p>
+        </div>
+
+        <h3>Individual Quiz Results</h3>
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th>Quiz</th>
+                    <th>Score</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% extends "base.html" %}
+
+                {% block content %}
+                    <h2>Your Score: {{ score }}</h2>
+                    <a href="{{ url_for('home') }}">Go Home</a>
+                {% endblock %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
