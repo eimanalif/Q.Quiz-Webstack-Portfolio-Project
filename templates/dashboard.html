@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard</title>
+</head>
+<body>
+    <h1>Welcome, {{ current_user.username }}!</h1>
+
+    <nav>
+        <!-- Logout button -->
+        <a href="{{ url_for('logout') }}">Log out</a>
+        
+        <!-- Take Quiz -->
+        <a href="{{ url_for('take_quiz') }}">Take a Quiz</a>
+        
+        <!-- Add Quiz (only visible to authorized users) -->
+        {% if current_user.is_authenticated and current_user.is_admin %}
+        <a href="{{ url_for('add_quiz') }}">Add a Quiz</a>
+        {% endif %}
+    </nav>
+</body>
+</html>

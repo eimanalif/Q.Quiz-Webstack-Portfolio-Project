@@ -9,6 +9,7 @@ import random
 from models import Quiz, Question, Answer
 from forms import QuizForm
 from flask_migrate import Migrate
+import os
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -59,7 +60,7 @@ def login():
 
 @app.route('/logout')
 def logout():
-    session.clear()  # Clears all session data
+    logout_user()  # Clears all session data
     flash('You have been logged out!', 'success')
     return redirect(url_for('login'))
 
@@ -109,10 +110,42 @@ def take_quiz(quiz_id):
 
     return render_template('quiz.html', quiz=quiz, form=form)
 
+@app.route('/take_quiz')
+@login_required
+def take_quizb_byUSER():
+    quizzes = Quiz.query.all()  # Fetch all quizzes from the database
+    return render_template('take_quiz.html', quizzes=quizzes)
+
 @app.route('/quiz/results')
 def quiz_results():
     score = session.get('score')
     return render_template('results.html', score=score)
 
+@app.route('/add_quiz', methods=['GET', 'POST'])
+@login_required
+def add_quiz():
+    if not current_user.is_admin:
+        flash("You don't have permission to access this page.", "danger")
+        return redirect(url_for('dashboard'))
+    
+    if request.method == 'POST':
+        title = request.form.get('title')
+        # Additional logic for adding quiz details
+
+        new_quiz = Quiz(title=title)
+        db.session.add(new_quiz)
+        db.session.commit()
+
+        flash("Quiz added successfully.", "success")
+        return redirect(url_for('dashboard'))
+
+    return render_template('add_quiz.html')
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    return render_template('dashboard.html')
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)   
