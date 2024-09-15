@@ -1,8 +1,25 @@
-<h1>Add a New Quiz</h1>
-
-<form method="POST">
-    <label for="title">Quiz Title</label>
-    <input type="text" id="title" name="title" required>
-    
-    <button type="submit">Add Quiz</button>
-</form>
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Add Quiz</title>
+</head>
+<body>
+    <h1>Add a New Quiz</h1>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <div>
+            {{ form.title.label }}<br>
+            {{ form.title(size=32) }}<br>
+            {% for error in form.title.errors %}
+                <span style="color: red;">[{{ error }}]</span><br>
+            {% endfor %}
+        </div>
+        <div>
+            {{ form.submit() }}
+        </div>
+    </form>
+    <a href="{{ url_for('home') }}">Back to Home</a>
+</body>
+</html>

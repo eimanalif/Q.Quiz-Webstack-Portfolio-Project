@@ -28,5 +28,5 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Login')
 
 class QuizForm(FlaskForm):
-    # We'll dynamically add the questions to this form in the view
-    submit = SubmitField('Submit')
+    title = StringField('Title', validators=[DataRequired()])
+    submit = SubmitField('Create Quiz')
