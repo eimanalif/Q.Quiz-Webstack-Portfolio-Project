@@ -1,19 +1,15 @@
-{% extends "base.html" %}
-
-{% block title %}Home{% endblock %}
-
-{% block content %}
-    <h2>Welcome to the Quiz App</h2>
-    
-    <!-- Add Dashboard button -->
-    <a class="btn btn-primary" href="{{ url_for('dashboard') }}">Go to Dashboard</a>
-    
-    <!-- Add New Quiz button -->
-    <a class="btn btn-secondary" href="{{ url_for('add_quiz') }}">Add New Quiz</a>
-
-    <!-- Display quizzes -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choose a Quiz</title>
+</head>
+<body>
     <h1>Available Quizzes</h1>
-    {% if quizzes %}
+    
+    <ul>
+        {% if quizzes %}
         <ul>
             {% for quiz in quizzes %}
                 <li>
@@ -30,4 +26,6 @@
     {% else %}
         <p>No quizzes found.</p>
     {% endif %}
-{% endblock %}
+    </ul>
+</body>
+</html>

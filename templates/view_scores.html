@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}View Scores{% endblock %}
+
+{% block content %}
+    <h2>Your Scores</h2>
+    <ul>
+        {% for score in scores %}
+            <li>Quiz ID: {{ score.quiz_id }} - Score: {{ score.score }}</li>
+        {% else %}
+            <li>No scores found.</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

@@ -1,25 +1,61 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Add Quiz</title>
-</head>
-<body>
-    <h1>Add a New Quiz</h1>
-    <form method="POST">
-        {{ form.hidden_tag() }}
-        <div>
-            {{ form.title.label }}<br>
-            {{ form.title(size=32) }}<br>
-            {% for error in form.title.errors %}
-                <span style="color: red;">[{{ error }}]</span><br>
-            {% endfor %}
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Add a New Quiz</h2>
+<form method="post" action="{{ url_for('add_quiz') }}">
+    <label for="title">Title:</label>
+    <input type="text" id="title" name="title" required>
+
+    <label for="description">Description:</label>
+    <textarea id="description" name="description" required></textarea>
+
+    <h3>Questions</h3>
+    <div id="questions-container">
+        <div class="question-block">
+            <label for="question1">Question 1:</label>
+            <input type="text" id="question1" name="questions[]" required>
+
+            <label for="answer1_1">Answer 1:</label>
+            <input type="text" id="answer1_1" name="answers[0][]" required>
+
+            <label for="answer1_2">Answer 2:</label>
+            <input type="text" id="answer1_2" name="answers[0][]">
+
+            <label for="answer1_3">Answer 3:</label>
+            <input type="text" id="answer1_3" name="answers[0][]">
+
+            <label for="answer1_4">Answer 4:</label>
+            <input type="text" id="answer1_4" name="answers[0][]">
         </div>
-        <div>
-            {{ form.submit() }}
-        </div>
-    </form>
-    <a href="{{ url_for('home') }}">Back to Home</a>
-</body>
-</html>
+    </div>
+
+    <button type="button" id="add-question">Add Another Question</button>
+    <button type="submit">Submit</button>
+</form>
+
+<script>
+    document.getElementById('add-question').addEventListener('click', function() {
+        const container = document.getElementById('questions-container');
+        const questionIndex = container.children.length;
+        const newQuestionBlock = document.createElement('div');
+        newQuestionBlock.classList.add('question-block');
+        newQuestionBlock.innerHTML = `
+            <label for="question${questionIndex + 1}">Question ${questionIndex + 1}:</label>
+            <input type="text" id="question${questionIndex + 1}" name="questions[]" required>
+
+            <label for="answer${questionIndex + 1}_1">Answer 1:</label>
+            <input type="text" id="answer${questionIndex + 1}_1" name="answers[${questionIndex}][]" required>
+
+            <label for="answer${questionIndex + 1}_2">Answer 2:</label>
+            <input type="text" id="answer${questionIndex + 1}_2" name="answers[${questionIndex}][]">
+
+            <label for="answer${questionIndex + 1}_3">Answer 3:</label>
+            <input type="text" id="answer${questionIndex + 1}_3" name="answers[${questionIndex}][]">
+
+            <label for="answer${questionIndex + 1}_4">Answer 4:</label>
+            <input type="text" id="answer${questionIndex + 1}_4" name="answers[${questionIndex}][]">
+        `;
+        container.appendChild(newQuestionBlock);
+    });
+</script>
+{% endblock %}

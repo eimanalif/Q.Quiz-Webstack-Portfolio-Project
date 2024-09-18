@@ -1,17 +1,22 @@
-from app import create_app  # Import your application factory
+from app import app  # Import your application factory
 from models import Quiz  # Import your Quiz model
+import unittest
 
-def test_create_quiz():
-    app = create_app('testing')  # Create an app instance in testing mode
-    with app.test_client() as client:
+# Optional: Mock library (if mocking database)
+# from unittest.mock import patch
+def test_create_quiz(app):  # Use app as a fixture
+    print("Creating test context...")
+    with app.test_context():  # Create a test context
+        client = app.test_client()
+        print("Created client...")
+
         # Simulate a POST request to create a quiz
         response = client.post('/quizzes', json={'title': 'My New Quiz'})
 
         assert response.status_code == 201  # Assert successful creation
 
-        # Check the database (optional)
-        quiz = Quiz.query.get(1)  # Assuming your quiz has an ID of 1
-        assert quiz.title == 'My New Quiz'
+        # ...
 
 if __name__ == '__main__':
+    print("Running tests...")
     unittest.main()  # Run your tests

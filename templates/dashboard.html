@@ -4,21 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <h1>Welcome, {{ current_user.username }}!</h1>
+    <div class="dashboard-container">
+        <h1>Welcome, {{ current_user.username }}</h1>
 
-    <nav>
-        <!-- Logout button -->
-        <a href="{{ url_for('logout') }}">Log out</a>
-        
-        <!-- Take Quiz -->
-        <a href="{{ url_for('take_quiz') }}">Take a Quiz</a>
-        
-        <!-- Add Quiz (only visible to authorized users) -->
-        {% if current_user.is_authenticated and current_user.is_admin %}
-        <a href="{{ url_for('add_quiz') }}">Add a Quiz</a>
-        {% endif %}
-    </nav>
+        <!-- Scores Section -->
+        <div class="dashboard-section">
+            <h2>Your Scores</h2>
+            <ul>
+                {% for score in scores %}
+                    <li>{{ score.quiz_name }}: {{ score.points }} / {{ score.total_points }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Action Buttons Section -->
+        <div class="dashboard-buttons">
+            <!-- Take a Quiz button -->
+            <a class="btn" href="{{ url_for('choose_quiz') }}">Take a Quiz</a>
+
+            <!-- Add a Quiz button -->
+            {% if current_user.is_admin %}
+                <a class="btn" href="{{ url_for('add_quiz') }}">Add a Quiz</a>
+            {% endif %}
+
+            <!-- View Scores button -->
+            <a class="btn" href="{{ url_for('view_scores') }}">View Scores</a>
+
+            <!-- Logout button -->
+            <a class="btn" href="{{ url_for('logout') }}">Logout</a>
+        </div>
+    </div>
 </body>
 </html>

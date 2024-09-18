@@ -44,3 +44,44 @@ input[type="password"] {
 .btn:hover {
     background-color: #0069d9;
 }
+
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+
+h1 {
+    text-align: center;
+}
+
+#quiz-container {
+    margin-top: 20px;
+}
+
+.question {
+    margin-bottom: 20px;
+}
+
+.answers {
+    list-style: none;
+    padding: 0;
+}
+
+.answers li {
+    margin-bottom: 10px;
+}
+
+#submit-button {
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+footer {
+    background-color: #f0f0f0;
+    padding: 5px;
+    text-align: bottom;
+}

@@ -1,7 +1,63 @@
-<h1>Available Quizzes</h1>
-
-<ul>
-    {% for quiz in quizzes %}
-    <li><a href="{{ url_for('start_quiz', quiz_id=quiz.id) }}">{{ quiz.title }}</a></li>
-    {% endfor %}
-</ul>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ quiz.title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            max-width: 800px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        p {
+            text-align: center;
+            color: #666;
+        }
+        form {
+            margin-top: 30px;
+        }
+        .question-card {
+            background: #fafafa;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .question-card legend {
+            font-size: 1.2em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .option {
+            margin: 10px 0;
+        }
+        .option input[type="radio"] {
+            margin-right: 10px;
+        }
+        button {
+            display: block;
+            width: 100%;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: p
