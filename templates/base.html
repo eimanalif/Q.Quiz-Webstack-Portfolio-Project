@@ -46,7 +46,7 @@
         <nav>
             <a href="{{ url_for('home') }}">Home</a>
             <a href="{{ url_for('add_quiz') }}" class="btn btn-secondary">Add Quiz</a>
-            <a href="{{ url_for('results') }}">Results</a>
+            <a href="{{ url_for('quiz_results', result_id=1) }}">Results</a>
             {% if current_user.is_authenticated %}
                 <a href="{{ url_for('logout') }}">Logout</a>
             {% else %}
