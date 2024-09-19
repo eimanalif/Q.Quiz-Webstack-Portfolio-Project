@@ -1,7 +1,6 @@
 from db import db
-from datetime import datetime
 from flask_login import UserMixin
-from sqlalchemy import Column, Integer, ForeignKey
+from sqlalchemy import Column, Integer, ForeignKey, String, Boolean
 from sqlalchemy.orm import relationship
 
 class User(db.Model, UserMixin):
@@ -10,72 +9,82 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(60), nullable=False)
     
-    # Relationships
-    quizzes = db.relationship('Quiz', backref='creator', lazy=True)
-    results = db.relationship('Result', backref='user', lazy=True)  # This creates the reverse relationship in `Result`
-    questions = db.relationship('Question', backref='author', lazy=True)
+    quizzes = db.relationship('Quiz', back_populates='user')
+    results = db.relationship('Result', back_populates='user')  
+    questions = db.relationship('Question', back_populates='user', cascade='all, delete-orphan')
     
     is_admin = db.Column(db.Boolean, default=False)
 
 class Quiz(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(200), nullable=False)
-    description = db.Column(db.String(255), nullable=True) 
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # User (creator) of the quiz
+    title = db.Column(db.String(120), nullable=False)
+    description = db.Column(db.String(500), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     
-    # Relationships
-    questions = db.relationship('Question', backref='quiz', lazy=True)
-    results = db.relationship('Result', backref='quiz', lazy=True)
+    user = db.relationship('User', back_populates='quizzes')
+    questions = db.relationship('Question', back_populates='quiz', cascade='all, delete-orphan')
+    results = db.relationship('Result', back_populates='quiz')
 
-    def __repr__(self):
-        return f'<Quiz {self.title}>'
+class Option(db.Model):
+    __tablename__ = 'option'
 
+    id = db.Column(db.Integer, primary_key=True)
+    text = db.Column(db.String, nullable=False)
+    is_correct = db.Column(db.Boolean, default=False)
+
+    question_id = db.Column(db.Integer, db.ForeignKey('question.id'), nullable=False) 
+
+    question = db.relationship('Question', back_populates='options', foreign_keys=[question_id])
 
 class Question(db.Model):
+    __tablename__ = 'question'
     id = db.Column(db.Integer, primary_key=True)
-    question_text = db.Column(db.String(500), nullable=False)
-    quiz_id = db.Column(db.Integer, db.ForeignKey('quiz.id'), nullable=False)  # Reference to Quiz
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Reference to User (who created the question)
-    
-    # Relationships
-    answers = db.relationship('Answer', backref='question', lazy=True)
+    text = db.Column(db.String(255), nullable=False)
 
-    def __repr__(self):
-        return f'<Question {self.question_text}>'
+    correct_option_id = db.Column(db.Integer, db.ForeignKey('option.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    quiz_id = db.Column(db.Integer, db.ForeignKey('quiz.id'), nullable=False)
 
-class Answer(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    text = db.Column(db.String(500), nullable=False)
-    is_correct = db.Column(db.Boolean, default=False)  # To mark if this answer is the correct one
-    question_id = db.Column(db.Integer, db.ForeignKey('question.id'), nullable=False)  # Reference to the question
 
-    def __repr__(self):
-        return f'<Answer {self.text}>'
+    user = db.relationship('User', back_populates='questions')
+    quiz = db.relationship('Quiz', back_populates='questions')
+
+    correct_option = db.relationship(
+        'Option',
+        foreign_keys=[correct_option_id],
+        backref='questions_correct'
+    )
+
+    options = db.relationship('Option', back_populates='question', foreign_keys='Option.question_id', cascade="all, delete-orphan")
+
+
 
 class Result(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     score = db.Column(db.Integer, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # User who took the quiz
-    quiz_id = db.Column(db.Integer, db.ForeignKey('quiz.id'), nullable=False)  # Quiz taken
-    option_id = db.Column(db.Integer, db.ForeignKey('option.id'), nullable=False) 
-    option = db.relationship('Option', backref='results')
-
-    def __repr__(self):
-        return f'<Result {self.score}>'
-
-class Option(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    text = db.Column(db.String(255), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    quiz_id = db.Column(db.Integer, db.ForeignKey('quiz.id'), nullable=False)
     question_id = db.Column(db.Integer, db.ForeignKey('question.id'), nullable=False)
+    option_id = db.Column(db.Integer, db.ForeignKey('option.id'), nullable=False)
+
+    user = db.relationship('User', back_populates='results')
+    quiz = db.relationship('Quiz', back_populates='results')
+    question = db.relationship('Question')
+    option = db.relationship('Option')
 
 class Score(db.Model):
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('user.id'))
-    quiz_id = Column(Integer, ForeignKey('quiz.id'))
-    score = Column(Integer)
+    id = db.Column(db.Integer, primary_key=True)
+    quiz_id = db.Column(db.Integer, db.ForeignKey('quiz.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    score = db.Column(db.Integer, nullable=False)
+    
+    quiz = db.relationship('Quiz', backref=db.backref('scores', lazy=True))
+    user = db.relationship('User', backref=db.backref('scores', lazy=True))
 
-
-    user = relationship("User", backref="scores")
-    quiz = relationship("Quiz", backref="scores")
-    def __repr__(self):
-        return f'<Score {self.id}>'
+class Choice(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    text = db.Column(db.String(255), nullable=False)
+    is_correct = db.Column(db.Boolean, default=False)
+    question_id = db.Column(db.Integer, db.ForeignKey('question.id'), nullable=False)
+    
+    question = db.relationship('Question', back_populates='choices')

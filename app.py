@@ -2,9 +2,10 @@ from flask import Flask, send_from_directory, jsonify, render_template, redirect
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from forms import RegistrationForm, LoginForm
-from models import User, Quiz, Question, Answer, Result, Option, Score
+from forms import RegistrationForm, LoginForm, AddQuizForm, QuizForm, QuestionForm, ChoiceForm
+from models import User, Quiz, Question, Result, Option, Score, Choice
 from config import Config
+from sqlalchemy.exc import IntegrityError
 from db import db
 import os
 from flask_migrate import Migrate
@@ -71,14 +72,44 @@ def logout():
 def dashboard():
     return render_template('dashboard.html')
 
-@app.route('/take_quiz/<int:quiz_id>', methods=['GET'])
+@app.route('/take_quiz/<int:quiz_id>', methods=['GET', 'POST'])
 @login_required
 def take_quiz(quiz_id):
+    # Retrieve the quiz and its questions
     quiz = Quiz.query.get_or_404(quiz_id)
-    questions = Question.query.filter_by(quiz_id=quiz_id).all()
-    if not questions:
-        flash('No questions available for this quiz.', 'info')
+    questions = quiz.questions  # Assuming you have a relationship setup
+
+    # Process the submitted answers
+    results = []
+    for question in questions:
+        selected_option_id = request.form.get(f'question_{question.id}')
+        correct_option = Option.query.filter_by(id=question.correct_option_id).first()
+        
+        # Create a result object
+        result = Result(
+            score=1 if selected_option_id == question.correct_option_id else 0,
+            user_id=current_user.id,
+            quiz_id=quiz_id,
+            question_id=question.id,
+            option_id=selected_option_id
+        )
+        results.append(result)
+
+    # Commit the results to the database
+    db.session.add_all(results)
+    db.session.commit()
+
+    return redirect(url_for('quiz_results', quiz_id=quiz_id))
     return render_template('take_quiz.html', quiz=quiz, questions=questions)
+
+@app.route('/results/<int:result_id>')
+@login_required
+def quiz_results(result_id):
+    result = Result.query.get_or_404(result_id)
+    quiz = Quiz.query.get(result.quiz_id)
+    return render_template('results.html', result=result, quiz=quiz)
+
+
 
 @app.route('/quiz/<int:quiz_id>', methods=['POST'])
 @login_required
@@ -105,15 +136,57 @@ def results():
 @app.route('/add_quiz', methods=['GET', 'POST'])
 @login_required
 def add_quiz():
-    if request.method == 'POST':
-        title = request.form['title']
-        description = request.form['description']
-        user_id = current_user.id  # Get the ID of the logged-in user
-        new_quiz = Quiz(title=title, description=description, user_id=user_id)
+    form = QuizForm()
+
+    if form.validate_on_submit():
+        # Create a new Quiz instance
+        new_quiz = Quiz(
+            title=form.title.data,
+            description=form.description.data,
+            user_id=current_user.id  # Associate the quiz with the current user
+        )
         db.session.add(new_quiz)
         db.session.commit()
-        return redirect(url_for('home'))
-    return render_template('add_quiz.html')
+
+        # Retrieve the ID of the newly created quiz
+        quiz_id = new_quiz.id
+        
+        # Add questions to the quiz
+        questions = form.questions.data  # Assume this is a list of question data from the form
+        for question_data in questions:
+            question_text = question_data.get('text', '')  # Extract text from question data
+            content = question_data.get('content', '')  # Extract content if available
+            if not content:  # Handle cases where content might be empty
+                content = "Default content"  # Provide default content if necessary
+
+            new_question = Question(
+                content=content,
+                quiz_id=quiz_id,
+                question_text=question_text,
+                user_id=current_user.id
+            )
+            db.session.add(new_question)
+            db.session.commit()  # Commit after each question is added
+
+            # Add choices for each question
+            for choice_data in question_data.get('choices', []):
+                choice = Choice(
+                    text=choice_data.get('text', ''),
+                    is_correct=choice_data.get('is_correct', False),
+                    question_id=new_question.id
+                )
+                db.session.add(choice)
+            db.session.commit()
+
+        flash('Quiz added successfully!', 'success')
+        return redirect(url_for('home'))  # Redirect to home after adding the quiz
+
+    # Print form errors to help debug
+    print(form.errors)
+
+    return render_template('add_quiz.html', form=form)
+
+
 
 @app.route('/edit_quiz/<int:quiz_id>', methods=['GET', 'POST'])
 @login_required
@@ -133,10 +206,16 @@ def edit_quiz(quiz_id):
 @login_required
 def delete_quiz(quiz_id):
     quiz = Quiz.query.get_or_404(quiz_id)
-    if quiz.user_id != current_user.id:
-        abort(403)
+    
+    # Make sure to access the correct attribute here
+    for question in quiz.questions:
+        for choice in question.choices:
+            db.session.delete(choice)
+        db.session.delete(question)
+    
     db.session.delete(quiz)
     db.session.commit()
+    
     flash('Quiz deleted successfully!', 'success')
     return redirect(url_for('home'))
 

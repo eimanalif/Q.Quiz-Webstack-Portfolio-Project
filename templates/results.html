@@ -2,30 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Results</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Results</title>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <h1>Your Quiz Results</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>Quiz</th>
-                <th>Score</th>
-                <th>Total</th>
-                <th>Date</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for result in results %}
-            <tr>
-                <td>{{ result.quiz.title }}</td>
-                <td>{{ result.score }}</td>
-                <td>{{ result.total }}</td>
-                <td>{{ result.timestamp }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    <script src="results.js"></script>
+    <div class="container">
+        <h1>{{ quiz.title }}</h1>
+        <p>Your score: {{ result.score }} out of {{ quiz.questions | length }}</p>
+        <a href="{{ url_for('home') }}">Return to Home</a>
+    </div>
 </body>
 </html>

@@ -1,18 +1,38 @@
-{% extends "base.html" %}
-
-{% block content %}
-  <h1>Quizzes</h1>
-  <ul>
-    {% for quiz in quizzes %}
-      <li>
-        <h2>{{ quiz.title }}</h2>
-        <p>{{ quiz.description }}</p>
-        <a href="{{ url_for('take_quiz', quiz_id=quiz.id) }}">Take Quiz</a>
-        <form action="{{ url_for('delete_quiz', quiz_id=quiz.id) }}" method="POST" style="display:inline;">
-          <input type="hidden" name="_method" value="DELETE">
-          <button type="submit" onclick="return confirm('Are you sure you want to delete this quiz?');">Delete Quiz</button>
-        </form>
-      </li>
-    {% endfor %}
-  </ul>
-{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quizzes</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Available Quizzes</h1>
+        {% if quizzes %}
+            <ul>
+                {% for quiz in quizzes %}
+                    <li>
+                        <h2>{{ quiz.title }}</h2>
+                        <p>{{ quiz.description }}</p>
+                        <ul>
+                            {% for question in quiz.questions %}
+                                <li>
+                                    <strong>{{ question.content }}</strong>
+                                    <ul>
+                                        {% for choice in question.choices %}
+                                            <li>{{ choice.text }}{% if choice.is_correct %} (Correct){% endif %}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No quizzes available.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

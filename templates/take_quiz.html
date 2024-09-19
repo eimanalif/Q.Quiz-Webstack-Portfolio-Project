@@ -4,94 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ quiz.title }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            color: #333;
-            margin: 0;
-            padding: 0;
-        }
-        .container {
-            width: 80%;
-            margin: 20px auto;
-            max-width: 800px;
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        h1 {
-            text-align: center;
-            color: #333;
-        }
-        p {
-            text-align: center;
-            color: #666;
-        }
-        form {
-            margin-top: 30px;
-        }
-        .question-card {
-            background: #fafafa;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-        }
-        .question-card legend {
-            font-size: 1.2em;
-            color: #333;
-            margin-bottom: 10px;
-        }
-        .option {
-            margin: 10px 0;
-        }
-        .option input[type="radio"] {
-            margin-right: 10px;
-        }
-        button {
-            display: block;
-            width: 100%;
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            padding: 10px;
-            font-size: 16px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-    </style>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <div class="container">
         <h1>{{ quiz.title }}</h1>
-        <p>{{ quiz.description }}</p>
-
-        <form method="POST" action="{{ url_for('submit_quiz', quiz_id=quiz.id) }}">
+        <form method="POST" action="{{ url_for('take_quiz', quiz_id=quiz.id) }}">
             {% if questions %}
-                {% for question in questions %}
-                    <fieldset class="question-card">
-                        <legend>{{ question.text }}</legend>
-                        {% for option in question.options %}
-                            <div class="option">
-                                <input type="radio" id="option{{ option.id }}" name="question{{ question.id }}" value="{{ option.id }}">
-                                <label for="option{{ option.id }}">{{ option.text }}</label>
-                            </div>
-                        {% endfor %}
-                    </fieldset>
-                {% endfor %}
+                <ul>
+                    {% for question in questions %}
+                        <li>
+                            <p>{{ question.content }}</p>
+                            <!-- Display choices for each question -->
+                            <ul>
+                                {% for choice in question.choices %}
+                                    <li>
+                                        <label>
+                                            <input type="radio" name="question_{{ question.id }}" value="{{ choice.id }}">
+                                            {{ choice.text }}
+                                        </label>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                    {% endfor %}
+                </ul>
             {% else %}
                 <p>No questions available for this quiz.</p>
             {% endif %}
             <button type="submit">Submit</button>
         </form>
     </div>
-
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>

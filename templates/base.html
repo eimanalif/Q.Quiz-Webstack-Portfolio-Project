@@ -66,4 +66,13 @@
         <p>&copy; 2024 Quiz App. All rights reserved.</p>
     </footer>
 </body>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="alert alert-info">
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
 </html>

@@ -1,4 +1,4 @@
-{% extends 'Quiz/dependencies.html' %}
+{% extends 'base.html' %}
 
 {% block content %}
 
