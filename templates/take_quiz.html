@@ -14,7 +14,7 @@
                 <ul>
                     {% for question in questions %}
                         <li>
-                            <p>{{ question.content }}</p>
+                            <p>{{ question.question_text }}</p>
                             <!-- Display choices for each question -->
                             <ul>
                                 {% for choice in question.choices %}

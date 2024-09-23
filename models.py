@@ -36,6 +36,7 @@ class Quiz(db.Model):
 class Question(db.Model):
     __tablename__ = 'question'
     id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.String(200), nullable=False)
     question_text = db.Column(db.String(200), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))  # Foreign key to User
     quiz_id = db.Column(db.Integer, db.ForeignKey('quiz.id'))
@@ -59,7 +60,8 @@ class Result(db.Model):
     score = db.Column(db.Integer, nullable=False)
     user_id = db.Column(db.Integer, ForeignKey('user.id'), nullable=False)  # User who took the quiz
     quiz_id = db.Column(db.Integer, ForeignKey('quiz.id'), nullable=False)  # Quiz taken
-
+    question_id = db.Column(db.Integer, db.ForeignKey('question.id'), nullable=False)
+    choice_id = db.Column(db.Integer, db.ForeignKey('choice.id'), nullable=False)
     # Relationships
     user = db.relationship('User', back_populates='results')
     quiz = db.relationship('Quiz', back_populates='results')

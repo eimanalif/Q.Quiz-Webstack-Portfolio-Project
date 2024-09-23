@@ -9,6 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from db import db
 from flask_migrate import Migrate
 import os
+from utils import calculate_score
 
 # Initialize the app and configure it
 app = Flask(__name__)
@@ -44,6 +45,7 @@ def check_answers(quiz, answers):
 @app.route('/')
 def home():
     quizzes = Quiz.query.all()
+    results = Result.query.all()
     return render_template('home.html', quizzes=quizzes)
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -94,22 +96,26 @@ def dashboard():
 @login_required
 def take_quiz(quiz_id):
     quiz = Quiz.query.get_or_404(quiz_id)
-    questions = quiz.questions  # Assuming you have a relationship set up
+    questions = quiz.questions  # Assuming a relationship between Quiz and Question
     results = []  # Initialize results here
 
     if request.method == 'POST':
         for question in questions:
-            selected_option_id = request.form.get(f'question_{question.id}')
-            if selected_option_id:
-                correct_option = Option.query.filter_by(id=question.correct_option_id).first()
-                
-                # Create a result object
+            # Get the selected choice for this question
+            selected_choice_id = request.form.get(f'question_{question.id}')
+            if selected_choice_id:
+                selected_choice = Choice.query.get(selected_choice_id)
+
+                # Find the correct choice for this question
+                correct_choice = Choice.query.filter_by(question_id=question.id, is_correct=True).first()
+
+                # Create a result object, score is 1 if the selected choice is correct
                 result = Result(
-                    score=1 if selected_option_id == question.correct_option_id else 0,
+                    score=1 if selected_choice == correct_choice else 0,
                     user_id=current_user.id,
                     quiz_id=quiz_id,
                     question_id=question.id,
-                    option_id=selected_option_id
+                    choice_id=selected_choice_id
                 )
                 results.append(result)
 
@@ -117,48 +123,58 @@ def take_quiz(quiz_id):
         if results:
             db.session.add_all(results)
             db.session.commit()
-            return redirect(url_for('quiz_results', result_id=results[-1].id))
+            return redirect(url_for('quiz_results', quiz_id=quiz_id, result_id=results[-1].id))  # Pass both quiz_id and result_id
         else:
             flash('No answers were submitted. Please select at least one option.', 'warning')
             return redirect(url_for('take_quiz', quiz_id=quiz_id))
 
     return render_template('take_quiz.html', quiz=quiz, questions=questions)
 
-@app.route('/quiz_results/<int:result_id>')
+@app.route('/quiz_results/<int:quiz_id>/<int:result_id>', methods=['GET'])
 @login_required
-def quiz_results(result_id):
-    result = Result.query.get_or_404(result_id)
-    quiz = Quiz.query.get(result.quiz_id)
-    return render_template('quiz_results.html', result=result, quiz=quiz)
+def quiz_results(quiz_id, result_id):
+    results = Result.query.filter_by(quiz_id=quiz_id).all()
+    score = calculate_score(results)  
+    total_score = len(results)  
+
+    return render_template('quiz_results.html', results=results, score=score)
 
 @app.route('/add_quiz', methods=['GET', 'POST'])
 @login_required
 def add_quiz():
     form = QuizForm()
+
     if form.validate_on_submit():
-        # Create the quiz
+        # Create a new Quiz instance
         new_quiz = Quiz(
             title=form.title.data,
             description=form.description.data,
-            user_id=current_user.id
+            user_id=current_user.id  # Associate the quiz with the current user
         )
         db.session.add(new_quiz)
-        db.session.commit()  # Commit to get the new quiz ID
+        db.session.commit()
 
-        # Add questions and choices
-        questions = form.questions.data  # Assuming this is a list of question data
+        # Retrieve the ID of the newly created quiz
+        quiz_id = new_quiz.id
+        
+        # Add questions to the quiz
+        questions = form.questions.data  # Assume this is a list of question data from the form
         for question_data in questions:
-            question_text = question_data.get('text', 'Default question')
+            question_text = question_data.get('text', '')  # Extract text from question data
+            content = question_data.get('content', '')  # Extract content if available
+            if not content:  # Handle cases where content might be empty
+                content = "Default content"  # Provide default content if necessary
+
             new_question = Question(
-                quiz_id=new_quiz.id,
+                content=content,
+                quiz_id=quiz_id,
                 question_text=question_text,
-                content=question_data.get('content', 'Default content'),
                 user_id=current_user.id
             )
             db.session.add(new_question)
-            db.session.commit()  # Commit to get the new question ID
+            db.session.commit()  # Commit after each question is added
 
-            # Add choices for the question
+            # Add choices for each question
             for choice_data in question_data.get('choices', []):
                 choice = Choice(
                     text=choice_data.get('text', ''),
@@ -166,10 +182,13 @@ def add_quiz():
                     question_id=new_question.id
                 )
                 db.session.add(choice)
-            db.session.commit()  # Commit after adding all choices for a question
+            db.session.commit()
 
         flash('Quiz added successfully!', 'success')
-        return redirect(url_for('home'))
+        return redirect(url_for('home'))  # Redirect to home after adding the quiz
+
+    # Print form errors to help debug
+    print(form.errors)
 
     return render_template('add_quiz.html', form=form)
 
