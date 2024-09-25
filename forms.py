@@ -3,8 +3,10 @@ from wtforms import  FieldList, StringField, PasswordField, TextAreaField, FormF
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
 from models import User
 from wtforms import RadioField, SubmitField
+# from flask_wtf.csrf import CSRFTokenField
 
 class RegistrationForm(FlaskForm):
+    # csrf_token = CSRFTokenField()
     username = StringField('Username', validators=[DataRequired(), Length(min=2, max=20)])
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired()])
@@ -22,30 +24,36 @@ class RegistrationForm(FlaskForm):
             raise ValidationError('That email is taken. Please choose a different one.')
 
 class LoginForm(FlaskForm):
+    # csrf_token = CSRFTokenField()
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired()])
     remember = BooleanField('Remember Me')
     submit = SubmitField('Login')
 
 class ChoiceForm(FlaskForm):
+    # csrf_token = CSRFTokenField()
     text = StringField('Choice Text', validators=[DataRequired()])
     is_correct = BooleanField('Correct')
 
 class QuestionForm(FlaskForm):
+    # csrf_token = CSRFTokenField()
     text = StringField('Question Text', validators=[DataRequired()])
     choices = FieldList(FormField(ChoiceForm), min_entries=4, max_entries=4)
 
 class QuizForm(FlaskForm):
+    # csrf_token = CSRFTokenField()
     title = StringField('Quiz Title', validators=[DataRequired()])
     description = StringField('Quiz Description', validators=[DataRequired()])
     questions = FieldList(FormField(QuestionForm), min_entries=1, max_entries=10)  # 10 questions per quiz
     submit = SubmitField('Add Quiz')
 
 class ChoiceForm(FlaskForm):
+    # csrf_token = CSRFTokenField()
     text = StringField('Choice Text', validators=[DataRequired()])
     is_correct = BooleanField('Is Correct?')
 
 class AddQuizForm(FlaskForm):
+    # csrf_token = CSRFTokenField()
     title = StringField('Quiz Title', validators=[DataRequired()])
     description = TextAreaField('Description')  # Optional description
     questions = FieldList(FormField(QuestionForm), min_entries=1)  # At least one question

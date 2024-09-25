@@ -12,3 +12,16 @@
         {% endfor %}
     </ul>
 {% endblock %}
+
+<div class="pagination">
+    {% if scores.has_prev %}
+        <a href="{{ url_for('view_scores', page=scores.prev_num) }}">Previous</a>
+    {% endif %}
+
+    <span>Page {{ scores.page }} of {{ scores.pages }}</span>
+
+    {% if scores.has_next %}
+        <a href="{{ url_for('view_scores', page=scores.next_num) }}">Next</a>
+    {% endif %}
+</div>
+

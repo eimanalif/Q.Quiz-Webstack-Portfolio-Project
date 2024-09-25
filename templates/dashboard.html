@@ -4,38 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Dashboard</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <div class="dashboard-container">
-        <h1>Welcome, {{ current_user.username }}</h1>
+    <div class="container mt-5">
+        <h1 class="text-center">Welcome, {{ current_user.username }}</h1>
 
         <!-- Scores Section -->
-        <div class="dashboard-section">
-            <h2>Your Scores</h2>
-            <ul>
-                {% for score in scores %}
-                    <li>{{ score.quiz_name }}: {{ score.points }} / {{ score.total_points }}</li>
-                {% endfor %}
-            </ul>
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2>Your Scores</h2>
+            </div>
+            <div class="card-body">
+                <ul class="list-group">
+                    {% for score in scores %}
+                        <li class="list-group-item">{{ score.quiz_name }}: {{ score.points }} / {{ score.total_points }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
         </div>
 
         <!-- Action Buttons Section -->
-        <div class="dashboard-buttons">
+        <div class="text-center mb-4">
+            <!-- Home button -->
+            <a class="btn btn-primary" href="{{ url_for('home') }}">Home</a>
+
             <!-- Take a Quiz button -->
-            <a class="btn" href="{{ url_for('choose_quiz') }}">Take a Quiz</a>
+            <a class="btn btn-success" href="{{ url_for('choose_quiz') }}">Take a Quiz</a>
 
             <!-- Add a Quiz button -->
             {% if current_user.is_admin %}
-                <a class="btn" href="{{ url_for('add_quiz') }}">Add a Quiz</a>
+                <a class="btn btn-info" href="{{ url_for('add_quiz') }}">Add a Quiz</a>
             {% endif %}
 
             <!-- View Scores button -->
-            <a class="btn" href="{{ url_for('view_scores') }}">View Scores</a>
+            <a class="btn btn-warning" href="{{ url_for('view_scores') }}">View Scores</a>
 
             <!-- Logout button -->
-            <a class="btn" href="{{ url_for('logout') }}">Logout</a>
+            <a class="btn btn-danger" href="{{ url_for('logout') }}">Logout</a>
         </div>
     </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

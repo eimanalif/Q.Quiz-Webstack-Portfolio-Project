@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, flash, request, abort
+from flask import Flask, render_template, redirect, url_for, jsonify, flash, request, abort
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
@@ -10,6 +10,7 @@ from db import db
 from flask_migrate import Migrate
 import os
 from utils import calculate_score
+from flask_wtf.csrf import CSRFProtect
 
 # Initialize the app and configure it
 app = Flask(__name__)
@@ -17,6 +18,7 @@ app.config.from_object(Config)
 
 # Initialize extensions
 db.init_app(app)
+csrf = CSRFProtect(app)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
@@ -98,6 +100,10 @@ def take_quiz(quiz_id):
     quiz = Quiz.query.get_or_404(quiz_id)
     questions = quiz.questions  # Assuming a relationship between Quiz and Question
     results = []  # Initialize results here
+    page = request.args.get('page', 1, type=int)
+
+    # Assuming each page contains 5 questions
+    questions_paginated = Question.query.filter_by(quiz_id=quiz_id).paginate(page=page, per_page=5)
 
     if request.method == 'POST':
         for question in questions:
@@ -128,7 +134,7 @@ def take_quiz(quiz_id):
             flash('No answers were submitted. Please select at least one option.', 'warning')
             return redirect(url_for('take_quiz', quiz_id=quiz_id))
 
-    return render_template('take_quiz.html', quiz=quiz, questions=questions)
+    return render_template('take_quiz.html', quiz=quiz, questions=questions_paginated.items, pagination=questions_paginated)
 
 @app.route('/quiz_results/<int:quiz_id>/<int:result_id>', methods=['GET'])
 @login_required
@@ -139,12 +145,15 @@ def quiz_results(quiz_id, result_id):
 
     return render_template('quiz_results.html', results=results, score=score)
 
+
 @app.route('/add_quiz', methods=['GET', 'POST'])
 @login_required
 def add_quiz():
     form = QuizForm()
 
-    if form.validate_on_submit():
+    if form.validate_on_submit():  # Validate the form
+        print("Form submitted successfully")
+
         # Create a new Quiz instance
         new_quiz = Quiz(
             title=form.title.data,
@@ -154,42 +163,39 @@ def add_quiz():
         db.session.add(new_quiz)
         db.session.commit()
 
-        # Retrieve the ID of the newly created quiz
-        quiz_id = new_quiz.id
+        quiz_id = new_quiz.id  # Retrieve the ID of the newly created quiz
         
-        # Add questions to the quiz
-        questions = form.questions.data  # Assume this is a list of question data from the form
-        for question_data in questions:
-            question_text = question_data.get('text', '')  # Extract text from question data
-            content = question_data.get('content', '')  # Extract content if available
-            if not content:  # Handle cases where content might be empty
-                content = "Default content"  # Provide default content if necessary
-
+        # Extract questions and choices from the form
+        for question_data in form.questions.data:
+            question_text = question_data.get('text', '')
             new_question = Question(
-                content=content,
+                content='Default content',  # Placeholder content
                 quiz_id=quiz_id,
                 question_text=question_text,
                 user_id=current_user.id
             )
             db.session.add(new_question)
-            db.session.commit()  # Commit after each question is added
+            db.session.commit()
 
             # Add choices for each question
             for choice_data in question_data.get('choices', []):
-                choice = Choice(
-                    text=choice_data.get('text', ''),
-                    is_correct=choice_data.get('is_correct', False),
+                choice_text = choice_data.get('text', '')
+                is_correct = choice_data.get('is_correct', False)
+
+                new_choice = Choice(
+                    text=choice_text,
+                    is_correct=is_correct,
                     question_id=new_question.id
                 )
-                db.session.add(choice)
+                db.session.add(new_choice)
+
             db.session.commit()
 
         flash('Quiz added successfully!', 'success')
-        return redirect(url_for('home'))  # Redirect to home after adding the quiz
+        print("Redirecting to home page")
+        return redirect(url_for('home'))  # Redirect after successful submission
 
-    # Print form errors to help debug
-    print(form.errors)
-
+    print("Form errors:", form.errors)  # Debug: Show form errors if validation fails
     return render_template('add_quiz.html', form=form)
 
 @app.route('/edit_quiz/<int:quiz_id>', methods=['GET', 'POST'])
@@ -215,6 +221,8 @@ def delete_quiz(quiz_id):
         for choice in question.choices:
             db.session.delete(choice)
         db.session.delete(question)
+    
+    Result.query.filter_by(quiz_id=quiz_id).delete()
     
     db.session.delete(quiz)
     db.session.commit()
@@ -248,4 +256,6 @@ def forbidden_error(error):
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
+    int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)

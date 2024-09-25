@@ -31,3 +31,16 @@
         <p>No quizzes found.</p>
     {% endif %}
 {% endblock %}
+
+<div class="pagination">
+    {% if quizzes.has_prev %}
+        <a href="{{ url_for('home', page=quizzes.prev_num) }}">Previous</a>
+    {% endif %}
+
+    <span>Page {{ quizzes.page }} of {{ quizzes.pages }}</span>
+
+    {% if quizzes.has_next %}
+        <a href="{{ url_for('home', page=quizzes.next_num) }}">Next</a>
+    {% endif %}
+</div>
+
