@@ -48,6 +48,7 @@ def check_answers(quiz, answers):
 def home():
     quizzes = Quiz.query.all()
     results = Result.query.all()
+    
     return render_template('home.html', quizzes=quizzes)
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -203,13 +204,44 @@ def add_quiz():
 def edit_quiz(quiz_id):
     quiz = Quiz.query.get_or_404(quiz_id)
     check_quiz_owner(quiz)
-    if request.method == 'POST':
-        quiz.title = request.form['title']
-        quiz.description = request.form['description']
+
+    form = QuizForm(obj=quiz)
+
+    if form.validate_on_submit():
+        # Update quiz title and description
+        quiz.title = form.title.data
+        quiz.description = form.description.data
+        
+        # Update existing questions or add new ones
+        for i, question_form in enumerate(form.questions):
+            if i < len(quiz.questions):
+                # Update existing question
+                question = quiz.questions[i]
+                question.text = question_form.text.data
+            else:
+                # Add new question if form has more questions than existing quiz
+                new_question = Question(text=question_form.text.data, quiz_id=quiz.id)
+                quiz.questions.append(new_question)
+                db.session.add(new_question)
+            
+            # Handle choices for each question
+            for j, choice_form in enumerate(question_form.choices):
+                if j < len(question.choices):
+                    # Update existing choice
+                    choice = question.choices[j]
+                    choice.text = choice_form.text.data
+                    choice.is_correct = choice_form.is_correct.data
+                else:
+                    # Add new choice if form has more choices than existing question
+                    new_choice = Choice(text=choice_form.text.data, is_correct=choice_form.is_correct.data, question_id=question.id)
+                    question.choices.append(new_choice)
+                    db.session.add(new_choice)
+        
         db.session.commit()
         flash('Quiz updated successfully!', 'success')
         return redirect(url_for('home'))
-    return render_template('edit_quiz.html', quiz=quiz)
+
+    return render_template('edit_quiz.html', quiz=quiz, form=form)
 
 @app.route('/delete_quiz/<int:quiz_id>', methods=['POST'])
 @login_required

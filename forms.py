@@ -1,9 +1,8 @@
 from flask_wtf import FlaskForm
-from wtforms import  FieldList, StringField, PasswordField, TextAreaField, FormField, SubmitField, BooleanField
+from wtforms import  RadioField, SubmitField, FieldList, StringField, PasswordField, TextAreaField, FormField, SubmitField, BooleanField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
 from models import User
-from wtforms import RadioField, SubmitField
-# from flask_wtf.csrf import CSRFTokenField
+
 
 class RegistrationForm(FlaskForm):
     # csrf_token = CSRFTokenField()
@@ -38,13 +37,13 @@ class ChoiceForm(FlaskForm):
 class QuestionForm(FlaskForm):
     # csrf_token = CSRFTokenField()
     text = StringField('Question Text', validators=[DataRequired()])
-    choices = FieldList(FormField(ChoiceForm), min_entries=4, max_entries=4)
+    choices = FieldList(FormField(ChoiceForm), min_entries=0, max_entries=10)
 
 class QuizForm(FlaskForm):
     # csrf_token = CSRFTokenField()
     title = StringField('Quiz Title', validators=[DataRequired()])
     description = StringField('Quiz Description', validators=[DataRequired()])
-    questions = FieldList(FormField(QuestionForm), min_entries=1, max_entries=10)  # 10 questions per quiz
+    questions = FieldList(FormField(QuestionForm), min_entries=1, max_entries=20)  # 20 questions per quiz
     submit = SubmitField('Add Quiz')
 
 class ChoiceForm(FlaskForm):
@@ -70,3 +69,7 @@ class AddQuizForm(FlaskForm):
                     break
             if not is_correct_found:
                 raise ValidationError('At least one choice must be marked correct per question.')
+
+# class DeleteQuizForm(FlaskForm):
+#     csrf_token = HiddenField()
+#     submit = SubmitField('Delete Quiz')
