@@ -12,6 +12,7 @@ Responsive Design: The application is optimized for both desktop and mobile devi
 
 Technologies Used
 Backend:
+
     Flask (Python-based web framework): For routing, handling HTTP requests, and serving your app's logic.
 
     SQLAlchemy (Object-Relational Mapper): For database interaction and managing models (like Quiz, Question, Choice, Result, etc.).
@@ -34,17 +35,23 @@ Installation
 To set up the Q Quiz application locally, follow these steps:
 
 Clone the repository: git clone https://github.com/eimanalif/Q.quiz-webstack-portfolio-project.git
-  cd Q.quiz-webstack-portfolio-project
+ 
+      cd Q.quiz-webstack-portfolio-project
 
 Create a virtual environment: 
-  python3 -m venv venv 
-  source venv/bin/activate # On Windows use venv\Scripts\activate
+ 
+      python3 -m venv venv 
+      source venv/bin/activate # On Windows use venv\Scripts\activate
 
-Install dependencies: pip install -r requirements.txt
+Install dependencies: 
+
+        pip install -r requirements.txt
 
 Set up the database: Run the following command to create the initial database structure: flask db upgrade
 
-Run the application: flask run Navigate to http://127.0.0.1:5000 in your web browser.
+Run the application: 
+
+        flask run 'Navigate to http://127.0.0.1:5000 in your web browser.'
 
 Usage
 To register, navigate to the registration page and create an account.
