@@ -26,15 +26,28 @@ migrate = Migrate(app, db)
 
 @login_manager.user_loader
 def load_user(user_id):
+    """
+    Load a user by ID for session management.
+    Flask-Login will use this to reload the user object from the user ID stored in the session.
+    """
     return User.query.get(int(user_id))
 
 # Utility function to check if a user owns a quiz
 def check_quiz_owner(quiz):
+    """
+    Ensures that only the user who created the quiz can modify it.
+    If the quiz doesn't belong to the current user, a 403 Forbidden error is raised.
+    """
     if quiz.user_id != current_user.id:
         abort(403)
 
 # Utility function to validate and process quiz answers
 def check_answers(quiz, answers):
+    """
+    Calculate the user's score for a quiz by checking selected answers against the correct ones.
+    The score is incremented for each correct answer.
+    Returns the total score.
+    """
     score = 0
     for question in quiz.questions:
         correct_option = Option.query.filter_by(question_id=question.id, is_correct=True).first()
@@ -46,6 +59,9 @@ def check_answers(quiz, answers):
 # Routes
 @app.route('/')
 def home():
+    """
+    Home page that displays all available quizzes.
+    """
     quizzes = Quiz.query.all()
     results = Result.query.all()
     
@@ -53,6 +69,10 @@ def home():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    """
+    Handle user registration.
+    On successful form validation, a new user is created and added to the database.
+    """
     if current_user.is_authenticated:
         return redirect(url_for('home'))
     form = RegistrationForm()
@@ -71,6 +91,10 @@ def register():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    """
+    Handle user login.
+    On successful validation, user is logged in and redirected to the dashboard.
+    """
     if current_user.is_authenticated:
         return redirect(url_for('home'))
     form = LoginForm()
@@ -86,6 +110,9 @@ def login():
 @app.route('/logout')
 @login_required
 def logout():
+    """
+    Log out the current user and redirect to the home page.
+    """
     logout_user()
     flash('You have been logged out.', 'success')
     return redirect(url_for('home'))
@@ -93,17 +120,25 @@ def logout():
 @app.route('/dashboard')
 @login_required
 def dashboard():
+    """
+    Display the user's dashboard. Requires the user to be logged in.
+    """
     return render_template('dashboard.html')
 
 @app.route('/take_quiz/<int:quiz_id>', methods=['GET', 'POST'])
 @login_required
 def take_quiz(quiz_id):
+    """
+    Render a quiz for the user to take.
+    Handles quiz question pagination and processes form submissions to check answers.
+    Stores results in the database after submission.
+    """
     quiz = Quiz.query.get_or_404(quiz_id)
     questions = quiz.questions  # Assuming a relationship between Quiz and Question
     results = []  # Initialize results here
     page = request.args.get('page', 1, type=int)
 
-    # Assuming each page contains 5 questions
+    # Paginate the questions (5 per page)
     questions_paginated = Question.query.filter_by(quiz_id=quiz_id).paginate(page=page, per_page=5)
 
     if request.method == 'POST':
@@ -140,6 +175,10 @@ def take_quiz(quiz_id):
 @app.route('/quiz_results/<int:quiz_id>/<int:result_id>', methods=['GET'])
 @login_required
 def quiz_results(quiz_id, result_id):
+    """
+    Display the results of the quiz for the user.
+    The results include the score and total number of questions.
+    """
     results = Result.query.filter_by(quiz_id=quiz_id).all()
     score = calculate_score(results)  
     total_score = len(results)  
@@ -150,6 +189,10 @@ def quiz_results(quiz_id, result_id):
 @app.route('/add_quiz', methods=['GET', 'POST'])
 @login_required
 def add_quiz():
+    """
+    Handle adding a new quiz.
+    Dynamically adds questions and choices from the form input and saves them to the database.
+    """
     form = QuizForm()
 
     if form.validate_on_submit():  # Validate the form
@@ -202,6 +245,10 @@ def add_quiz():
 @app.route('/edit_quiz/<int:quiz_id>', methods=['GET', 'POST'])
 @login_required
 def edit_quiz(quiz_id):
+    """
+    Handle editing an existing quiz.
+    Allows editing quiz title, description, questions, and choices.
+    """
     quiz = Quiz.query.get_or_404(quiz_id)
     check_quiz_owner(quiz)
 
@@ -246,6 +293,10 @@ def edit_quiz(quiz_id):
 @app.route('/delete_quiz/<int:quiz_id>', methods=['POST'])
 @login_required
 def delete_quiz(quiz_id):
+    """
+    Handle deleting a question from a quiz.
+    This deletes the question and its associated choices.
+    """
     quiz = Quiz.query.get_or_404(quiz_id)
     check_quiz_owner(quiz)
 
@@ -265,6 +316,9 @@ def delete_quiz(quiz_id):
 @app.route('/submit_quiz/<int:quiz_id>', methods=['POST'])
 @login_required
 def submit_quiz(quiz_id):
+    """
+    Handle quiz submission and score calculation
+    """
     quiz = Quiz.query.get_or_404(quiz_id)
     answers = request.form
     score = check_answers(quiz, answers)
@@ -273,17 +327,26 @@ def submit_quiz(quiz_id):
 @app.route('/choose_quiz')
 @login_required
 def choose_quiz():
+    """
+    Display a page where the user can select a quiz to take.
+    """
     quizzes = Quiz.query.all()
     return render_template('choose_quiz.html', quizzes=quizzes)
 
 @app.route('/view_scores')
 @login_required
 def view_scores():
+    """
+    Display the current user's quiz scores.
+    """
     scores = Result.query.filter_by(user_id=current_user.id).all()
     return render_template('view_scores.html', scores=scores)
 
 @app.errorhandler(403)
 def forbidden_error(error):
+    """
+    Handle 403 Forbidden errors.
+    """
     return render_template('403.html'), 403
 
 if __name__ == '__main__':
